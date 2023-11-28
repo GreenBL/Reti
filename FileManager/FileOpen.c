@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <ctype.h>
 
 int main(int argc, char** argv) {
 
@@ -8,7 +9,7 @@ int main(int argc, char** argv) {
     FILE *file;
 
     int character = 0x0;
-    file = fopen("file.txt", "r");
+    file = fopen("file.txt", "rb");
     if(file == NULL) {
         printf("\nNULL file Error!\n");
         return -1;
@@ -17,7 +18,12 @@ int main(int argc, char** argv) {
     char buffer[1024];
     while ((character = fgetc(file)) != EOF) {
         // Process each character
-        putchar(character);
+        putchar(toupper(character));
+        fflush(stdout);
+        usleep(100000);
+        if(character == 'o') {
+            usleep(10000);
+        }
     }
     puts("");
     fclose(file);
