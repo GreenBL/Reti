@@ -105,8 +105,84 @@ Adesso associamo la socket all'indirizzo del server:
 Adesso possiamo fare entrare il server TCP in stato di listen:
 
 ```c
-    listen(sockfd, )
+    int queue_size = 5;
+    listen(sockfd, queue_size);
 ```
+La funzione listen richiede come argomenti il file descriptor della socket e la dimensione della queue di connessioni.
+
+Adesso entriamo dritti nelle istruzioni che diamo al server.
+
+```c
+    do {
+        clilen = sizeof(cli_addr);
+        newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr ,(socklen_t *)&clilen);
+
+        if (newsockfd < 0) {
+              error("ERROR on accept");
+        }
+
+        pid=fork();
+
+/*
+        - - - - - - - - - - PROCESSO FIGLIO - - - - - - - - - -
+*/
+        if (pid == 0) {
+
+            close(sockfd);
+
+            bzero(buffer,256);
+            n = read(newsockfd,buffer,255);
+            if (n < 0) {
+                error("ERROR reading from socket");
+            }
+
+            if(!strcmp(buffer, "T\n")) {
+                counter++;
+
+                time_t t = time(NULL);
+
+                char* timestr = ctime(&t);
+                n = write(newsockfd, timestr, strlen(timestr)+1);
+
+                if (n < 0) {
+                    error("ERROR writing to socket");
+                }
+            } 
+
+		else if(!strcmp(buffer, "N\n")) {
+            char cnt[5];
+            sprintf(cnt, "%d", counter);
+            n = write(newsockfd, cnt, strlen(cnt));
+            if (n < 0) {
+                error("ERROR writing to socket");
+            }
+        }
+
+		else {
+            // delay
+            printf("Please press a key...");
+            char c;
+            scanf("%c", &c);
+            n = write(newsockfd, "Message received", 20);
+            if (n < 0) {
+                error("ERROR writing to socket");
+            }
+        }
+
+        close(newsockfd);
+        return 0;
+        }
+/*
+        - - - - - - - - - - FINE PROCESSO FIGLIO - - - - - - - - - -
+*/
+
+        close(newsockfd);
+        
+    } while (1);
+    return 0;
+```
+
+
 
 
 
