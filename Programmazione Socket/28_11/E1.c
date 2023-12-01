@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
     bzero((char*) &serv_addr , sizeof(serv_addr));
 
     portno = atoi(argv[1]); // converts port number from string to int
-    printf("listening on port: %d", portno);
+    printf("listening on port: %d\n", portno);
     // server addr init
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -54,7 +54,8 @@ int main(int argc, char *argv[]) {
 
     // estabilish connection with client
     pid_t pid;
-    int counter, n;
+    int counter, condition_check;
+    int loop;
     do {
         clilen = sizeof(cli_addr);
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr,(socklen_t *) &clilen);
@@ -64,50 +65,29 @@ int main(int argc, char *argv[]) {
         }
 
         pid = fork();
+
         if (pid == 0) {
+            // read socket data
+            bzero(buffer, sizeof(buffer));
+            condition_check = read(newsockfd, buffer, sizeof(buffer) - 1);
+            printf("I have read from socket: %s\n", buffer);
             close(sockfd);
-            bzero(buffer,BUFFER_SIZE);
-
-            n = read(newsockfd,buffer,255);
-
-            if (n < 0) {
-                error("ERROR reading from socket");
-            }
-
-            if(!strcmp(buffer, "T\n")) {
-                counter++;
-                time_t t = time(NULL);
-                char* timestr = ctime(&t);
-                n = write(newsockfd, timestr, strlen(timestr)+1);
-
-                if (n < 0) {
-                    error("ERROR writing to socket");
-                } else if (!strcmp(buffer, "N\n")) {
-                    char cnt[5];
-                    sprintf(cnt, "%d", counter);
-                    n = write(newsockfd, cnt, strlen(cnt));
-                    if (n < 0) {
-                        error("ERROR writing to socket");
-                    } else {
-                        // delay
-                        printf("Please press a key...");
-                        char c;
-                        scanf("%c", &c);
-                        n = write(newsockfd, "Message received", 20);
-                        if (n < 0) {
-                        error("ERROR writing to socket");
-                        }
-                    }   
-                }
-            }
             close(newsockfd);
+            return 0;
         }
+        
         close(newsockfd);
-        return 0;
+        printf("Do you want to terminate the parent server process?\n");
+        bzero(buffer,sizeof(buffer));
+        fgets(buffer, sizeof(buffer) - 1, stdin);
+        condition_check = strcmp(buffer, "yes");
+        if(condition_check == 0) {
+            loop = 0;
+        }
 
-    } while(1);
+    } while(loop == 1);
 
-    
+    return 0;
 
 
 }
