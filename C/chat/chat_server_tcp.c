@@ -5,6 +5,8 @@
 #include <strings.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+// remove from mac
+#include <sys/wait.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
@@ -52,6 +54,7 @@ int main(int argc, char *argv[]) {
     // accept loop
 
     do {
+        printf("preparing to accept a new client\n");
         clilen = sizeof(cl_addr);
         printf("Listening...\n");
         newsockfd = accept(socketfd,(struct sockaddr*) &cl_addr, (socklen_t*) &clilen);
